@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+
+<classpath name="src" />
+
+    <meta title="nme-gui" package="io.nme.nme-gui" version="1.0.0" company="NME" />
+    <app main="Main" path="Export" file="nme-gui" />
+    <window background="#FFFFFF" fps="60" width="260" height="60"/>
+
+    <haxelib name="haxeui-nme"/>
+    <haxelib name="haxeui-core"/>
+    <haxelib name="format"/>
+    <haxelib name="gm2d"/>
+    <haxelib name="hxcpp"/>
+
+    <source path='${haxelib:nme}\tools\nme\src' />
+    <source path='${haxelib:nme}\tools\nme\src\helpers' />
+    <source path='${haxelib:nme}\tools\nme\src\project' />
+
+</project>

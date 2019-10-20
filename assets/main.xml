@@ -1,0 +1,19 @@
+<vbox width="100%" height="100%" style="padding: 5px; ">
+	<box width="100%" id="hbox1" style="___background-color: red;">
+		<hbox>
+			<button id="Load" text="Load"/>
+			<button id="Save" text="Save"/>
+			<textfield id="fileName" text="" />
+		</hbox>
+	</box>
+	<box width="100%" id="hbox1" style="___background-color: red;">
+		<hbox>
+			<button id="Test" text="Test"/>
+		</hbox>
+	</box>
+	<box width="100%" id="hbox1" style="___background-color: red;">
+		<hbox>
+			<label id="outMsg" text="Dummy"/>
+		</hbox>
+	</box>
+</vbox>
