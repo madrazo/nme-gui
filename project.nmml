@@ -16,5 +16,6 @@
     <source path='${haxelib:nme}\tools\nme\src' />
     <source path='${haxelib:nme}\tools\nme\src\helpers' />
     <source path='${haxelib:nme}\tools\nme\src\project' />
+    <haxeflag name="--remap" value="neko:cpp" unless="neko"/>
 
 </project>
