@@ -63,7 +63,7 @@ class CommandLineToolsOverride
              "installer", "copy-if-newer", "tidy", "set", "unset", "nocompile",
             "clean", "update", "build", "run", "rerun", "install", "uninstall", "trace", "test",
             "rebuild", "shell", "icon", "banner", "favicon", "serve", "listbrowsers",
-            "prepare", "quickrun" ];
+            "prepare", "quickrun", "prepareproject" ];
    static var setNames =  [ "target", "bin", "command", "cppiaHost", "cppiaClassPath", "deploy", "developmentTeam" ];
    static var setNamesHelp =  [ "default when no target is specifiec", "alternate location for binary files", "default command to run", "executable for running cppia code", "additional class path when building cppia", "remote deployment host", "IOS development team id (10 character code)" ];
    static var quickSetNames =  [ "debug", "verbose" ];
@@ -71,10 +71,13 @@ class CommandLineToolsOverride
 
    private static function buildProject(project:NMEProject) 
    {
-      trace(words.length);
-
       if (!loadProject(project,command=="script"))
          return;
+      buildProjectAfterLoad(project);
+   }
+
+   private static function buildProjectAfterLoad(project:NMEProject) 
+   {
 
       var platform:Platform = null;
 
@@ -1035,9 +1038,8 @@ class CommandLineToolsOverride
    }
    #end
 
-   static function loadProject(project:NMEProject,allowMissing:Bool) : Bool
+   public static function loadProject(project:NMEProject,allowMissing:Bool) : Bool
    {
-trace(words.length);
       Log.verbose("Loading project...");
 
       var projectFile = "";
@@ -1049,8 +1051,6 @@ trace(words.length);
          var test = words[w].toLowerCase();
          if (isTarget(test))
          {
-            trace(".");
-
             targetName = test;
             words.splice(w,1);
             break;
@@ -1091,20 +1091,16 @@ trace(words.length);
             Log.verbose('Using default target "$targetName"');
          }
       }
-trace(words.length);
       if (words.length>0)
       {
          if (FileSystem.exists(words[0])) 
          {
-trace(words[0]);
             if (FileSystem.isDirectory(words[0])) 
             {
                projectFile = findProjectFile(words[0]);
-trace(".");
             }
             else
             {
-trace(".");
                explicitProjectFile = true;
                projectFile = words[0];
             }
@@ -1112,14 +1108,12 @@ trace(".");
       }
       else
       {
-trace(".");
          projectFile = findProjectFile(Sys.getCwd());
       }
 
 
       if (projectFile == "") 
       {
-trace(".");
          if (allowMissing)
             return true;
 
@@ -1360,10 +1354,10 @@ trace(".");
 
    public static function main():Void 
    {
-      commandToolsMain(null);
+      commandToolsMain(null,null);
    }
 
-   public static function commandToolsMain(arguments:Array<String>):Void 
+   public static function commandToolsMain(arguments:Array<String>, project:NMEProject):NMEProject 
    {
       if(arguments == null)
       {
@@ -1379,10 +1373,14 @@ trace(".");
       if (!Loader.foundNdll)
       {
          buildNdll();
-         return;
+         return null;
       }
 
-      var project = new NMEProject( );
+      if(project == null)
+      {
+         project = new NMEProject( );
+      }
+
       project.localDefines.set("NME",nme);
 
       traceEnabled = null;
@@ -1421,17 +1419,9 @@ trace(".");
          catch(e:Dynamic) { }
       }
 
-trace(words.length);
-trace("aaa");
-trace(words.length);
-trace(words.length);
-trace(words.length);
-trace(words.length);
 
 
       processArguments(project, arguments);
-trace(words.length);
-trace(words.length);
 
       if (storeData.cppiaClassPath!=null && !project.hasDef("CPPIA_CLASSPATH") )
          project.localDefines.set("CPPIA_CLASSPATH", storeData.cppiaClassPath);
@@ -1440,13 +1430,16 @@ trace(words.length);
       if (storeData.developmentTeam!=null && !project.hasDef("DEVELOPMENT_TEAM"))
          project.localDefines.set("DEVELOPMENT_TEAM", storeData.developmentTeam);
 
-trace(words.length);
+      
 
       if (Log.mVerbose && command!="") 
       {
          displayInfo(false, command=="xcode" || quick);
          //sys.println("");
       }
+
+      if(command == "prepareproject")
+         return project;
 
       switch(command) 
       {
@@ -1501,14 +1494,12 @@ trace(words.length);
                buildProject(project);
 
          case "clean", "update", "build", "run", "rerun", "install", "installer", "uninstall", "trace", "test", "tidy", "nocompile", "prepare", "quickrun":
-trace(words.length);
 
             if (words.length > 2) 
             {
                Log.error("Incorrect number of arguments for command '" + command + "'");
-               return;
+               return null;
             }
-trace(words.length);
 
             buildProject(project);
 
@@ -1531,6 +1522,7 @@ trace(words.length);
 
             Log.error("'" + command + "' is not a valid command");
       }
+      return null;
    }
 
    public static function parseDeploy(inDeploy:String, inRequire:Bool, inForScript:Bool)
@@ -1569,10 +1561,8 @@ trace(words.length);
 
       if ( (!favIcon && (width==0 || height==0)) || name==null)
          Log.error("Usage: nme icon iconname.png width height");
-trace(words.length);
 
       words.splice(0,3);
-trace(words.length);
 
       if (!loadProject(project,false))
          Log.error("Could not load project");
@@ -1609,14 +1599,11 @@ trace(words.length);
 
    private static function processArguments(project:NMEProject, arguments:Array<String>):Void 
    {
-trace(words.length);
-
       var lastCharacter = nme.substr( -1, 1);
       if (lastCharacter == "/" || lastCharacter == "\\") 
          nme = nme.substr(0, -1);
 
       nmeVersion = getVersion();
-trace(words.length);
 
       if (arguments.length > 0) 
       {
@@ -1629,25 +1616,21 @@ trace(words.length);
             lastArgument = arguments.pop();
             if (lastArgument.length > 0) break;
          }
-trace(words.length);
 
          lastArgument = new Path(lastArgument).toString();
          if (((StringTools.endsWith(lastArgument, "/") && lastArgument != "/") ||
                StringTools.endsWith(lastArgument, "\\")) &&
                !StringTools.endsWith(lastArgument, ":\\")) 
             lastArgument = lastArgument.substr(0, lastArgument.length - 1);
-trace(words.length);
 
          if (FileSystem.exists(lastArgument) && FileSystem.isDirectory(lastArgument)) 
             Sys.setCwd(lastArgument);
       }
-trace(words.length);
 
       project.localDefines.set("DOCS", FsOverride.getDocs());
       project.localDefines.set("DESKTOP", FsOverride.getDesktop());
 
       command = "";
-trace(words.length);
 
       var argIdx = 0;
       while(argIdx < arguments.length)
@@ -1841,13 +1824,11 @@ trace(words.length);
          // No '-'
          else
          {
-trace(words.length);
             words.push(argument);
             if (argument=="rebuild")
                while(argIdx < arguments.length)
                   additionalArguments.push(arguments[argIdx++]);
          }
-trace(words.length);
       }
 
       toolkit = !project.hasDef("notoolkit");

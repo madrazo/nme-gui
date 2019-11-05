@@ -14,6 +14,7 @@ class Main {
 
     static var mProjectPath:String;
     static var mLoadedOK:Bool;
+    static var mProject:NMEProject;
 
     public static function main() {
         var app = new HaxeUIApp();
@@ -25,9 +26,11 @@ class Main {
                 var path:String = main.fileName.text;
                 if (FileSystem.exists(path))
                 {
-                    main.outMsg.text = "LOADED OK";
+                    mProject = null; //new NMEProject( );
                     mProjectPath = main.fileName.text;
-                    mLoadedOK = true;
+                    mProject = CommandLineToolsOverride.commandToolsMain(["prepareproject", mProjectPath, "cpp"],mProject);
+                    mLoadedOK = CommandLineToolsOverride.loadProject(mProject,false);
+                    main.outMsg.text = "LOADED "+ (mLoadedOK ? "OK" : "FAIL");
                 }
                 else
                 {
@@ -40,7 +43,13 @@ class Main {
                 if(mLoadedOK)
                 {
                     main.outMsg.text = "Testing...";
-                    CommandLineToolsOverride.commandToolsMain(["test", mProjectPath, "cpp"]);
+                        #if (target.threaded)
+                        sys.thread.Thread.create(() -> {
+                        #end
+                            CommandLineToolsOverride.commandToolsMain(["test", mProjectPath, "cpp"],mProject);
+                        #if (target.threaded)
+                        });
+                        #end
                 }
                 else
                 {
