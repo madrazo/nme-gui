@@ -1376,12 +1376,14 @@ class CommandLineToolsOverride
          return null;
       }
 
+      var hasProject:Bool = false;
       if(project == null)
       {
          project = new NMEProject( );
+         hasProject = true;
+         project.localDefines.set("NME",nme);
       }
 
-      project.localDefines.set("NME",nme);
 
       traceEnabled = null;
 
@@ -1419,7 +1421,7 @@ class CommandLineToolsOverride
          catch(e:Dynamic) { }
       }
 
-
+      project.target = "null";
 
       processArguments(project, arguments);
 
